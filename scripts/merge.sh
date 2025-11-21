@@ -21,6 +21,7 @@ for LABEL in "${LABELS[@]}"; do
     MANIFEST_MERGE_CALL="docker buildx imagetools create -t ghcr.io/opajonk/eclipse-score_devcontainer:${LABEL}"
 
     for ARCH in "${ARCHITECTURES[@]}"; do
+        docker pull "ghcr.io/opajonk/eclipse-score_devcontainer:${LABEL}-${ARCH}"
         MANIFEST_MERGE_CALL+=" ghcr.io/opajonk/eclipse-score_devcontainer:${LABEL}-${ARCH}"
     done
 
