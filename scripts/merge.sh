@@ -12,7 +12,13 @@ for LABEL in "$@"; do
 done
 
 # Define target architectures
-ARCHITECTURES=("amd64", "arm64")
+ARCHITECTURES=("amd64" "arm64")
+
+for LABEL in "${LABELS[@]}"; do
+    for ARCH in "${ARCHITECTURES[@]}"; do
+        docker pull --platform "linux/${ARCH}" "ghcr.io/opajonk/eclipse-score_devcontainer:${LABEL}-${ARCH}"
+    done
+done
 
 # Create and push the merged multiarch manifest for each tag; each tag combines all architecture-specific tags into one tag
 for LABEL in "${LABELS[@]}"; do
@@ -21,7 +27,6 @@ for LABEL in "${LABELS[@]}"; do
     MANIFEST_MERGE_CALL="docker buildx imagetools create -t ghcr.io/opajonk/eclipse-score_devcontainer:${LABEL}"
 
     for ARCH in "${ARCHITECTURES[@]}"; do
-        docker pull "ghcr.io/opajonk/eclipse-score_devcontainer:${LABEL}-${ARCH}"
         MANIFEST_MERGE_CALL+=" ghcr.io/opajonk/eclipse-score_devcontainer:${LABEL}-${ARCH}"
     done
 
