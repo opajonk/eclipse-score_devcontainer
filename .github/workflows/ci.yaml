@@ -11,9 +11,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-amd64:
-    name: 'DevContainer (amd64)'
-    runs-on: ubuntu-24.04
+  build:
+    strategy:
+      matrix:
+        os: [arm64, amd64]
+        include:
+          - os: amd64
+            name: 'DevContainer (amd64)'
+            runner: ubuntu-24.04
+          - os: arm64
+            name: 'DevContainer (arm64)'
+            runner: ubuntu-24.04-arm
+
+    name: '{{ matrix.name }}'
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
@@ -47,7 +58,7 @@ jobs:
             ./scripts/create_builder.sh
 
             # Build
-            ./scripts/build.sh --amd64 "main"
+            ./scripts/build.sh --${{ matrix.os }} "main"
 
             # Test
             ./scripts/test.sh
@@ -58,61 +69,12 @@ jobs:
             if [ "${{ github.ref }}" = "refs/heads/main" ]; then
               # manually login to ghcr.io for publishing
               echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-              ./scripts/publish.sh --amd64 "main"
+              ./scripts/publish.sh --${{ matrix.os }} "main"
             fi
 
-  build-arm64:
-    name: 'DevContainer (arm64)'
-    runs-on: ubuntu-24.04-arm
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
-    steps:
-      - name: Checkout (GitHub)
-        uses: actions/checkout@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # Use .devcontainer from THIS repo for building and testing
-      - name: Check, Build, Test, Publish
-        uses: devcontainers/ci@v0.3
-        with:
-          # The .devcontainer is never published as pre-built container.
-          # We want to only use it for building and testing the actual container, which resides in src/s-core-devcontainer.
-          push: "never"
-          runCmd: |
-            set -eux pipefail
-
-            # Check
-            pre-commit run --show-diff-on-failure --color=always --all-files || exit -1
-
-            # Create builder for multi-arch builds
-            ./scripts/create_builder.sh
-
-            # Build
-            ./scripts/build.sh --arm64 "main"
-
-            # Test
-            ./scripts/test.sh
-
-            # Optionally: Publish
-            # We do not use the push feature of devcontainers/ci here, since that would push the wrong container.
-            # Instead, we use the publish script which pushes the correct container (residing in src/s-core-devcontainer).
-            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-              # manually login to ghcr.io for publishing
-              echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-              ./scripts/publish.sh --arm64 "main"
-            fi
   merge:
     name: 'Merge Labels (main only)'
-    needs: ["build-amd64", "build-arm64"]
+    needs: ["build"]
     runs-on: ubuntu-24.04
     if: github.ref == 'refs/heads/main'
     permissions:
