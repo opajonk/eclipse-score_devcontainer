@@ -23,7 +23,7 @@ jobs:
             name: 'DevContainer (arm64)'
             runner: ubuntu-24.04-arm
 
-    name: '{{ matrix.name }}'
+    name: '${{ matrix.name }}'
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
