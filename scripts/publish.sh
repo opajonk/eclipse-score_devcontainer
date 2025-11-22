@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
-if [[ "$1" != "--arm64" && "$1" != "--amd64" ]]; then
+if [[ "$#" -lt 1 || "$1" != "--arm64" && "$1" != "--amd64" ]]; then
     echo "Error: First parameter must be --arm64 or --amd64."
     exit 1
 fi
@@ -18,6 +18,11 @@ ARCH="amd64"
 if [[ "$ARCH_OPTION" == "--arm64" ]]; then
     ARCH="arm64"
 fi
+
+LABELS=()
+for LABEL in "$@"; do
+    LABELS+=("${LABEL}")
+done
 
 echo "Building all tags (${LABELS[@]}) for architecture: ${ARCH}"
 # Prepare image names with tags (each tag includes a label and an architecture)

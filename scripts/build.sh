@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
-if [[ "$1" != "--arm64" && "$1" != "--amd64" ]]; then
+if [[ "$#" -lt 1 || "$1" != "--arm64" && "$1" != "--amd64" ]]; then
     echo "Error: First parameter must be --arm64 or --amd64."
     exit 1
 fi
