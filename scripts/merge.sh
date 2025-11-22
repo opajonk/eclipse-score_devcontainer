@@ -14,6 +14,7 @@ done
 # Define target architectures
 ARCHITECTURES=("amd64" "arm64")
 
+# Pull all architecture-specific images for each label
 for LABEL in "${LABELS[@]}"; do
     for ARCH in "${ARCHITECTURES[@]}"; do
         docker pull --platform "linux/${ARCH}" "ghcr.io/opajonk/eclipse-score_devcontainer:${LABEL}-${ARCH}"

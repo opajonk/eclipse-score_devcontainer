@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-x86_64:
-    name: 'Check, Build, Test, Publish DevContainer (x86_64)'
+  build-amd64:
+    name: 'DevContainer (x86_64)'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -47,7 +47,7 @@ jobs:
             ./scripts/create_builder.sh
 
             # Build
-            ./scripts/build.sh "main"
+            ./scripts/build.sh --amd64 "main"
 
             # Test
             ./scripts/test.sh
@@ -58,11 +58,11 @@ jobs:
             if [ "${{ github.ref }}" = "refs/heads/main" ]; then
               # manually login to ghcr.io for publishing
               echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-              ./scripts/publish.sh "main"
+              ./scripts/publish.sh --amd64 "main"
             fi
 
   build-arm64:
-    name: 'Check, Build, Test, Publish DevContainer (arm64)'
+    name: 'DevContainer (arm64)'
     runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
@@ -97,7 +97,7 @@ jobs:
             ./scripts/create_builder.sh
 
             # Build
-            ./scripts/build-arm.sh "main"
+            ./scripts/build.sh --arm64 "main"
 
             # Test
             ./scripts/test.sh
@@ -108,12 +108,13 @@ jobs:
             if [ "${{ github.ref }}" = "refs/heads/main" ]; then
               # manually login to ghcr.io for publishing
               echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-              ./scripts/publish-arm.sh "main"
+              ./scripts/publish.sh --arm64 "main"
             fi
   merge:
-    name: 'Merge Labels'
-    needs: ["build-x86_64", "build-arm64"]
+    name: 'Merge Labels (main only)'
+    needs: ["build-amd64", "build-arm64"]
     runs-on: ubuntu-24.04
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
@@ -140,11 +141,9 @@ jobs:
           runCmd: |
             set -eux pipefail
 
-            # Optionally: Merge
+            # Merge
             # We do not use the push feature of devcontainers/ci here, since that would push the wrong container.
             # Instead, we use the publish script which pushes the correct container (residing in src/s-core-devcontainer).
-            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-              # manually login to ghcr.io for publishing
-              echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-              ./scripts/merge.sh "main"
-            fi
+            # manually login to ghcr.io for publishing
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            ./scripts/merge.sh "main"
