@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   build-amd64:
-    name: 'DevContainer (x86_64)'
+    name: 'DevContainer (amd64)'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
