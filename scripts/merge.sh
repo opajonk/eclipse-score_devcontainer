@@ -17,7 +17,7 @@ ARCHITECTURES=("amd64" "arm64")
 # Pull all architecture-specific images for each label
 for LABEL in "${LABELS[@]}"; do
     for ARCH in "${ARCHITECTURES[@]}"; do
-        docker pull --platform "linux/${ARCH}" "ghcr.io/eclipse-score/devcontainer:${LABEL}-${ARCH}"
+        docker pull --platform "linux/${ARCH}" "ghcr.io/opajonk/eclipse-score_devcontainer:${LABEL}-${ARCH}"
     done
 done
 
@@ -25,10 +25,10 @@ done
 for LABEL in "${LABELS[@]}"; do
     echo "Merging all architectures (${ARCHITECTURES[@]}) into single tag: ${LABEL}"
 
-    MANIFEST_MERGE_CALL="docker buildx imagetools create -t ghcr.io/eclipse-score/devcontainer:${LABEL}"
+    MANIFEST_MERGE_CALL="docker buildx imagetools create -t ghcr.io/opajonk/eclipse-score_devcontainer:${LABEL}"
 
     for ARCH in "${ARCHITECTURES[@]}"; do
-        MANIFEST_MERGE_CALL+=" ghcr.io/eclipse-score/devcontainer:${LABEL}-${ARCH}"
+        MANIFEST_MERGE_CALL+=" ghcr.io/opajonk/eclipse-score_devcontainer:${LABEL}-${ARCH}"
     done
 
     eval "$MANIFEST_MERGE_CALL"
